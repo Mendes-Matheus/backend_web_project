@@ -8,9 +8,8 @@ import lombok.Data;
 public class PersistenceEntity {
 
     @Id
-    @Column(nullable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
 //    @Version
 //    private Long version;
