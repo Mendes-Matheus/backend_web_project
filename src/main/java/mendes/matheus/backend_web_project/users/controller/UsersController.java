@@ -1,11 +1,11 @@
 package mendes.matheus.backend_web_project.users.controller;
 
-
 import lombok.RequiredArgsConstructor;
 import mendes.matheus.backend_web_project.users.dto.UsersIdDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersRequestDTO;
 import mendes.matheus.backend_web_project.users.service.UsersService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +20,7 @@ public class UsersController {
     private final UsersService usersService;
 
     @PostMapping
-    public ResponseEntity<UsersIdDTO> createUser(@RequestBody UsersRequestDTO body, UriComponentsBuilder uriComponentsBuilder){
+    public ResponseEntity<UsersIdDTO> createUser(@Validated @RequestBody UsersRequestDTO body, UriComponentsBuilder uriComponentsBuilder){
         UsersIdDTO usersIdDTO = this.usersService.createUser(body);
 
         var uri = uriComponentsBuilder.path("/user/{id}").buildAndExpand(usersIdDTO.userId()).toUri();
