@@ -5,15 +5,17 @@ import mendes.matheus.backend_web_project.users.exceptions.UserAlreadyExistsExce
 import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
@@ -56,14 +58,28 @@ public class GlobalExceptionHandler {
      * retorna uma resposta HTTP com o status BAD_REQUEST (400) e o corpo da resposta é o mapa de erros
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException exception) {
-        Map<String, String> errors = new HashMap<>();
-        exception.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
+    public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        BindingResult bindingResult = exception.getBindingResult();
+        List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+
+        // Ordena os FieldErrors de acordo com a lista de campos esperados
+        List<FieldError> sortedFieldErrors = fieldErrors.stream()
+                .sorted((fe1, fe2) -> Integer.compare(
+                        FieldOrder.EXPECTED_USER_FIELDS_ORDER.indexOf(fe1.getField()),
+                        FieldOrder.EXPECTED_USER_FIELDS_ORDER.indexOf(fe2.getField())
+                ))
+                .toList();
+
+        // Preenche o LinkedHashMap com os erros na ordem correta
+        sortedFieldErrors.forEach(error -> {
+            String fieldName = error.getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
 }

@@ -39,7 +39,7 @@ public class UsersService {
                     Users newUser = new Users();
                     newUser.setName(req.name());
                     newUser.setEmail(req.email());
-                    newUser.setUsername(req.username()); // Certifique-se de definir o username
+                    newUser.setUsername(req.username());
                     newUser.setPassword(req.password());
                     this.usersRepository.save(newUser);
                     return new UsersIdDTO(newUser.getId());
