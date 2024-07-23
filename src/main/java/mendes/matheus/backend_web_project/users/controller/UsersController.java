@@ -1,11 +1,14 @@
 package mendes.matheus.backend_web_project.users.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import mendes.matheus.backend_web_project.infrastructure.util.ResultError;
 import mendes.matheus.backend_web_project.users.dto.UsersIdDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersRequestDTO;
 import mendes.matheus.backend_web_project.users.service.UsersService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,13 +22,21 @@ public class UsersController {
 
     private final UsersService usersService;
 
-    @PostMapping
-    public ResponseEntity<UsersIdDTO> createUser(@Validated @RequestBody UsersRequestDTO body, UriComponentsBuilder uriComponentsBuilder){
-        UsersIdDTO usersIdDTO = this.usersService.createUser(body);
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> createUser(@Valid @RequestBody UsersRequestDTO body, BindingResult result, UriComponentsBuilder uriComponentsBuilder) {
 
+        if (result.hasErrors()) {
+            // Se houver erros de validação, retorna status 400 e os erros
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResultError.getResultErrors(result));
+        }
+
+        // Se não houver erros, cria o usuário e constrói a URI
+        UsersIdDTO usersIdDTO = this.usersService.createUser(body);
         var uri = uriComponentsBuilder.path("/user/{id}").buildAndExpand(usersIdDTO.userId()).toUri();
 
+        // Retorna status 201 Created com a URI e o corpo da resposta contendo UsersIdDTO
         return ResponseEntity.created(uri).body(usersIdDTO);
     }
+
 
 }
