@@ -1,6 +1,7 @@
 package mendes.matheus.backend_web_project.users.service;
 
 import lombok.RequiredArgsConstructor;
+import mendes.matheus.backend_web_project.infrastructure.mapper.ObjectMapperUtil;
 import mendes.matheus.backend_web_project.users.exceptions.UserAlreadyExistsException;
 import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException;
 import mendes.matheus.backend_web_project.users.model.Users;
@@ -13,13 +14,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Optional;
 
+/**
+ * @author Matheus Mendes
+ */
 @Service
 @Validated
 @RequiredArgsConstructor
 public class UsersService {
     private final UsersRepository usersRepository;
+    private final ObjectMapperUtil objectMapperUtil;
 
 
+    /**
+     * Método responsável por criar um usuário
+     *
+     * @param usersRequestDTO
+     * @return
+     * retorna um objeto UsersIdDTO com o ID do usuário criado
+     */
     public UsersIdDTO createUser(@RequestBody @Validated UsersRequestDTO usersRequestDTO) {
 
         // Verifica se já existe um usuário com o email fornecido
@@ -34,15 +46,10 @@ public class UsersService {
 
         // Usa Optional para encadear verificações e operações
         return Optional.of(usersRequestDTO)
-                .filter(req -> !existsByEmail && !existsByUsername)
+                .filter(req ->!existsByEmail &&!existsByUsername)
                 .map(req -> {
-                    Users newUser = new Users();
-                    newUser.setName(req.name());
-                    newUser.setEmail(req.email());
-                    newUser.setUsername(req.username());
-                    newUser.setPassword(req.password());
-                    this.usersRepository.save(newUser);
-                    return new UsersIdDTO(newUser.getId());
+                    Users users = this.usersRepository.save(objectMapperUtil.map(req, Users.class));
+                    return new UsersIdDTO(users.getId()); // Create a new instance with the user's ID
                 })
                 .orElseThrow(() -> new UserAlreadyExistsException("User already exists"));
     }
