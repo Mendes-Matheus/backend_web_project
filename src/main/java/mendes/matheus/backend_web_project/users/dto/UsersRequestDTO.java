@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record UsersRequestDTO(
 
-        @JsonProperty(value = "name", required = true)
+        @JsonProperty(value = "name")
         @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters")
         @NotBlank(message = "Name is required")
         String name,
@@ -23,7 +23,7 @@ public record UsersRequestDTO(
         String username,
 
         @JsonProperty(value = "password")
-        @NotBlank(message = "Password is required")
         @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters")
+        @NotBlank(message = "Password is required")
         String password
 ) {}
