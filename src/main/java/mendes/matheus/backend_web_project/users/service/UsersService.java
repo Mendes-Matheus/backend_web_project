@@ -2,10 +2,10 @@ package mendes.matheus.backend_web_project.users.service;
 
 import lombok.RequiredArgsConstructor;
 import mendes.matheus.backend_web_project.infrastructure.mapper.ObjectMapperUtil;
+import mendes.matheus.backend_web_project.users.dto.UsersSimpleResponseDTO;
 import mendes.matheus.backend_web_project.users.exceptions.UserAlreadyExistsException;
 import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException;
 import mendes.matheus.backend_web_project.users.model.Users;
-import mendes.matheus.backend_web_project.users.dto.UsersIdDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersRequestDTO;
 import mendes.matheus.backend_web_project.users.repository.UsersRepository;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,7 @@ public class UsersService {
      * @return
      * retorna um objeto UsersIdDTO com o ID do usuário criado
      */
-    public UsersIdDTO createUser(@RequestBody @Validated UsersRequestDTO usersRequestDTO) {
+    public UsersSimpleResponseDTO createUser(@RequestBody @Validated UsersRequestDTO usersRequestDTO) {
 
         // Verifica se já existe um usuário com o email fornecido
         boolean existsByEmail = this.usersRepository
@@ -49,9 +49,9 @@ public class UsersService {
                 .filter(req ->!existsByEmail &&!existsByUsername)
                 .map(req -> {
                     Users users = this.usersRepository.save(objectMapperUtil.map(req, Users.class));
-                    return new UsersIdDTO(users.getId()); // Create a new instance with the user's ID
+                    return new UsersSimpleResponseDTO(users.getUsername()); // Cria uma nova instância com o ID do usuário
                 })
-                .orElseThrow(() -> new UserAlreadyExistsException("User already exists"));
+                .orElseThrow(() -> new UserAlreadyExistsException("User " + usersRequestDTO.username() + " already exists"));
     }
 
     public Users getUserById(Long userId){
