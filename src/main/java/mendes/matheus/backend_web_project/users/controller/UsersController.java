@@ -3,8 +3,8 @@ package mendes.matheus.backend_web_project.users.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mendes.matheus.backend_web_project.infrastructure.util.ResultError;
-import mendes.matheus.backend_web_project.users.dto.UsersIdDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersRequestDTO;
+import mendes.matheus.backend_web_project.users.dto.UsersSimpleResponseDTO;
 import mendes.matheus.backend_web_project.users.service.UsersService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +31,11 @@ public class UsersController {
         }
 
         // Se não houver erros, cria o usuário e constrói a URI
-        UsersIdDTO usersIdDTO = this.usersService.createUser(body);
-        var uri = uriComponentsBuilder.path("/user/{id}").buildAndExpand(usersIdDTO.userId()).toUri();
+        UsersSimpleResponseDTO usersSimpleResponseDTO = this.usersService.createUser(body);
+        var uri = uriComponentsBuilder.path("/user/{id}").buildAndExpand(usersSimpleResponseDTO.username()).toUri();
 
-        // Retorna status 201 Created com a URI e o corpo da resposta contendo UsersIdDTO
-        return ResponseEntity.created(uri).body(usersIdDTO);
+        // Retorna status 201 Created com a URI e o corpo da resposta contendo usersSimpleResponseDTO
+        return ResponseEntity.created(uri).body(usersSimpleResponseDTO);
     }
 
 
