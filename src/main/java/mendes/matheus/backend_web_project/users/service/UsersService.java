@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import mendes.matheus.backend_web_project.infrastructure.mapper.ObjectMapperUtil;
 import mendes.matheus.backend_web_project.users.dto.UsersSimpleResponseDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersSummaryResponseDTO;
+import mendes.matheus.backend_web_project.users.dto.UsersUpdateDTO;
 import mendes.matheus.backend_web_project.users.exceptions.UserAlreadyExistsException;
 import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException;
 import mendes.matheus.backend_web_project.users.model.Users;
@@ -71,5 +72,37 @@ public class UsersService {
 
     public List<UsersSummaryResponseDTO> getAllUsersDTO() {
         return usersRepository.findAllProjectedBy();
+    }
+
+    /**
+     * Método responsável por atualizar um usuário
+     *
+     * @param userId
+     * @param usersUpdateDTO
+     * @return
+     * retorna um objeto UsersSimpleResponseDTO com o username do usuário atualizado
+     */
+    public UsersSimpleResponseDTO updateUser(Long userId, @RequestBody @Validated UsersUpdateDTO usersUpdateDTO) {
+        Users existingUser = getUserById(userId);
+
+        // Atualiza os campos do usuário
+        existingUser.setName(usersUpdateDTO.name());
+        existingUser.setUsername(usersUpdateDTO.username());
+        existingUser.setEmail(usersUpdateDTO.email());
+
+        // Salva o usuário atualizado
+        Users updatedUser = this.usersRepository.save(existingUser);
+
+        return new UsersSimpleResponseDTO(updatedUser.getUsername());
+    }
+
+    /**
+     * Método responsável por excluir um usuário
+     *
+     * @param userId
+     */
+    public void deleteUser(Long userId) {
+        Users existingUser = getUserById(userId);
+        this.usersRepository.delete(existingUser);
     }
 }
