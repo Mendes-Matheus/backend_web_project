@@ -104,4 +104,5 @@ public class UsersService {
         Users existingUser = getUserById(userId);
         this.usersRepository.delete(existingUser);
     }
+
 }
