@@ -8,6 +8,7 @@ import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException
 import mendes.matheus.backend_web_project.users.model.Users;
 import mendes.matheus.backend_web_project.users.repository.UsersRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -31,6 +32,7 @@ public class UsersService {
      * @return
      * retorna um objeto UsersIdDTO com o ID do usuário criado
      */
+    @Transactional
     public UsersSimpleResponseDTO createUser(@RequestBody @Validated UsersRequestDTO usersRequestDTO) {
 
         // Verifica se já existe um usuário com o email ou com o username fornecido
@@ -105,6 +107,7 @@ public class UsersService {
      * @return
      * retorna um objeto UsersSimpleResponseDTO com o username do usuário atualizado
      */
+    @Transactional
     public UsersSimpleResponseDTO updateUser(Long userId, @RequestBody @Validated UsersUpdateDTO usersUpdateDTO) {
         Users existingUser = getUserEntityById(userId);
 
@@ -124,6 +127,7 @@ public class UsersService {
      *
      * @param userId
      */
+    @Transactional
     public void deleteUser(Long userId) {
         Users existingUser = getUserEntityById(userId);
         this.usersRepository.delete(existingUser);
