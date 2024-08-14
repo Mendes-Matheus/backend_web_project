@@ -14,8 +14,5 @@ public record UsersResponseDTO(
         String email,
 
         @JsonProperty(value = "username")
-        String username,
-
-        @JsonProperty(value = "password")
-        String password
+        String username
 ) {}
