@@ -39,6 +39,24 @@ public class UsersController {
         return ResponseEntity.created(uri).body(usersSimpleResponseDTO);
     }
 
+    @GetMapping(value = "/{id}", produces = "application/json")
+    public ResponseEntity<UsersSimpleResponseDTO> getUserById(@PathVariable Long id) {
+        UsersSimpleResponseDTO user = this.usersService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping(value = "/username/{username}", produces = "application/json")
+    public ResponseEntity<UsersSimpleResponseDTO> getUserByUsername(@PathVariable String username) {
+        UsersSimpleResponseDTO user = this.usersService.getUserByUsername(username);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping(value = "/email/{email}", produces = "application/json")
+    public ResponseEntity<UsersSimpleResponseDTO> getUserByEmail(@PathVariable String email) {
+        UsersSimpleResponseDTO user = this.usersService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<UsersSummaryResponseDTO>> getAllUsersDTO() {
         List<UsersSummaryResponseDTO> users = usersService.getAllUsersDTO();
