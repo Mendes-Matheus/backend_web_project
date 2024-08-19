@@ -7,6 +7,8 @@ import mendes.matheus.backend_web_project.users.exceptions.UserAlreadyExistsExce
 import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException;
 import mendes.matheus.backend_web_project.users.model.Users;
 import mendes.matheus.backend_web_project.users.repository.UsersRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -95,9 +97,16 @@ public class UsersService {
         return new UsersSimpleResponseDTO(user.getUsername());
     }
 
-    public List<UsersSummaryResponseDTO> getAllUsersDTO() {
-        return usersRepository.findAllProjectedBy();
+//    public List<UsersSummaryResponseDTO> getAllUsersDTO() {
+//        return usersRepository.findAllUsers();
+//    }
+
+    public Page<UsersSummaryResponseDTO> getAllUsersDTO(PageRequest pageRequest) {
+        Page<Users> usersPage = usersRepository.findAllUsers(pageRequest);
+        return usersPage.map(user -> objectMapperUtil.map(user, UsersSummaryResponseDTO.class));
     }
+
+
 
     /**
      * Método responsável por atualizar um usuário

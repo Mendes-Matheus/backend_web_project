@@ -8,12 +8,16 @@ import mendes.matheus.backend_web_project.users.dto.UsersSimpleResponseDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersSummaryResponseDTO;
 import mendes.matheus.backend_web_project.users.dto.UsersUpdateDTO;
 import mendes.matheus.backend_web_project.users.service.UsersService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -24,20 +28,25 @@ public class UsersController {
     private final UsersService usersService;
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> createUser(@Valid @RequestBody UsersRequestDTO body, BindingResult result, UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<?> createUsers(@Valid @RequestBody List<UsersRequestDTO> bodies, BindingResult result, UriComponentsBuilder uriComponentsBuilder) {
 
         if (result.hasErrors()) {
             // Se houver erros de validação, retorna status 400 e os erros
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResultError.getResultErrors(result));
         }
 
-        // Se não houver erros, cria o usuário e constrói a URI
-        UsersSimpleResponseDTO usersSimpleResponseDTO = this.usersService.createUser(body);
-        var uri = uriComponentsBuilder.path("/user/{id}").buildAndExpand(usersSimpleResponseDTO.username()).toUri();
+        List<UsersSimpleResponseDTO> responseList = new ArrayList<>();
 
-        // Retorna status 201 Created com a URI e o corpo da resposta contendo usersSimpleResponseDTO
-        return ResponseEntity.created(uri).body(usersSimpleResponseDTO);
+        for (UsersRequestDTO body : bodies) {
+            // Cria cada usuário
+            UsersSimpleResponseDTO usersSimpleResponseDTO = this.usersService.createUser(body);
+            responseList.add(usersSimpleResponseDTO);
+        }
+
+        // Retorna status 201 Created com a lista de respostas
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseList);
     }
+
 
     @GetMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<UsersSimpleResponseDTO> getUserById(@PathVariable Long id) {
@@ -57,11 +66,25 @@ public class UsersController {
         return ResponseEntity.ok(user);
     }
 
+//    @GetMapping(produces = "application/json")
+//    public ResponseEntity<List<UsersSummaryResponseDTO>> getAllUsersDTO() {
+//        List<UsersSummaryResponseDTO> users = usersService.getAllUsersDTO();
+//        return ResponseEntity.ok(users);
+//    }
+
     @GetMapping(produces = "application/json")
-    public ResponseEntity<List<UsersSummaryResponseDTO>> getAllUsersDTO() {
-        List<UsersSummaryResponseDTO> users = usersService.getAllUsersDTO();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<Page<UsersSummaryResponseDTO>> getAllUsersDTO(
+            @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "sortBy", required = false, defaultValue = "id") String sortBy) {
+
+        // Cria o PageRequest com offset, pageSize e ordenação
+        PageRequest pageRequest = PageRequest.of(offset, pageSize, Sort.by(sortBy));
+
+        // Retorna a página com os dados
+        return ResponseEntity.ok(usersService.getAllUsersDTO(pageRequest));
     }
+
 
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UsersUpdateDTO body, BindingResult result) {
