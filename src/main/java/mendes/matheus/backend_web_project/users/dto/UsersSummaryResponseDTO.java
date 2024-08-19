@@ -1,15 +1,18 @@
 package mendes.matheus.backend_web_project.users.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-public record UsersSummaryResponseDTO(
+@Getter
+public class UsersSummaryResponseDTO {
 
         @JsonProperty(value = "id")
-        Long id,
+        private Long id;
 
         @JsonProperty(value = "name")
-        String name,
+        private String name;
 
         @JsonProperty(value = "username")
-        String username
-) { }
+        private String username;
+
+}
