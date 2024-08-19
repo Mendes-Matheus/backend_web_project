@@ -15,4 +15,13 @@ public class UsersSummaryResponseDTO {
         @JsonProperty(value = "username")
         private String username;
 
+        @JsonProperty(value = "city")
+        private String city;
+
+        @JsonProperty(value = "state")
+        private String state;
+
+        @JsonProperty(value = "street")
+        private String street;
+
 }
