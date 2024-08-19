@@ -27,5 +27,18 @@ public class Users extends PersistenceEntity implements Serializable {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String cep;
+
+    @Column(nullable = true)
+    private String city;
+
+    @Column(nullable = true)
+    private String state;
+
+    @Column(nullable = true)
+    private String street;
+
+
 }
 
