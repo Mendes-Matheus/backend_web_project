@@ -43,7 +43,7 @@ public class UsersController {
             responseList.add(usersSimpleResponseDTO);
         }
 
-        // Retorna status 201 Created com a lista de respostas
+        // Retorna status 201 Created com a lista de usuarios
         return ResponseEntity.status(HttpStatus.CREATED).body(responseList);
     }
 

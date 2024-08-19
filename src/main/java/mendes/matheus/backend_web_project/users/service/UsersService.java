@@ -25,6 +25,7 @@ import java.util.List;
 public class UsersService {
     private final UsersRepository usersRepository;
     private final ObjectMapperUtil objectMapperUtil;
+    private final ViaCepService viaCepService;
 
 
     /**
@@ -40,8 +41,20 @@ public class UsersService {
         // Verifica se já existe um usuário com o email ou com o username fornecido
         validateUserDoesNotExist(usersRequestDTO);
 
-        Users users = this.usersRepository.save(objectMapperUtil.map(usersRequestDTO, Users.class));
-        return new UsersSimpleResponseDTO(users.getUsername());
+        // Busca os dados do endereço pelo CEP
+        AddressDTO address = viaCepService.getAddressByCep(usersRequestDTO.cep());
+
+        // Cria o usuário com os dados do endereço
+        Users users = objectMapperUtil.map(usersRequestDTO, Users.class);
+        users.setCity(address.localidade());
+        users.setState(address.uf());
+        users.setStreet(address.logradouro());
+
+//        Users savedUser = this.usersRepository.save(objectMapperUtil.map(usersRequestDTO, Users.class));
+//        return new UsersSimpleResponseDTO(savedUser.getUsername());
+        // Salva o usuário no banco de dados
+        Users savedUser = usersRepository.save(users);
+        return new UsersSimpleResponseDTO(savedUser.getUsername());
     }
 
     private void validateUserDoesNotExist(UsersRequestDTO usersRequestDTO) {
@@ -97,16 +110,10 @@ public class UsersService {
         return new UsersSimpleResponseDTO(user.getUsername());
     }
 
-//    public List<UsersSummaryResponseDTO> getAllUsersDTO() {
-//        return usersRepository.findAllUsers();
-//    }
-
     public Page<UsersSummaryResponseDTO> getAllUsersDTO(PageRequest pageRequest) {
         Page<Users> usersPage = usersRepository.findAllUsers(pageRequest);
         return usersPage.map(user -> objectMapperUtil.map(user, UsersSummaryResponseDTO.class));
     }
-
-
 
     /**
      * Método responsável por atualizar um usuário
