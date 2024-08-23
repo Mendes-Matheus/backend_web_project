@@ -1,6 +1,5 @@
 package mendes.matheus.backend_web_project.users.repository;
 
-import mendes.matheus.backend_web_project.users.dto.UsersSummaryResponseDTO;
 import mendes.matheus.backend_web_project.users.model.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +18,11 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     Optional<Users> findByUsername(String username);
 
-    Optional<Users> findUsersById(Long userId);
+    @Query("SELECT u FROM Users u")
+    Page<Users> findAllUsersPageable(Pageable pageable);
 
     @Query("SELECT u FROM Users u")
-    Page<Users> findAllUsers(Pageable pageable);
+    List<Users> findAllUsers();
 
     @Query("SELECT u FROM Users u WHERE u.email = :email OR u.username = :username")
     List<Users> findByEmailOrUsername(@Param("email") String email, @Param("username") String username);
