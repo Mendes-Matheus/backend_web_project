@@ -8,13 +8,19 @@ import mendes.matheus.backend_web_project.users.exceptions.UserNotFoundException
 import mendes.matheus.backend_web_project.users.model.Users;
 import mendes.matheus.backend_web_project.users.repository.UsersRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Matheus Mendes
@@ -26,6 +32,7 @@ public class UsersService {
     private final UsersRepository usersRepository;
     private final ObjectMapperUtil objectMapperUtil;
     private final ViaCepService viaCepService;
+    private static final Logger log = LoggerFactory.getLogger(UsersService.class);
 
 
     /**
@@ -36,25 +43,38 @@ public class UsersService {
      * retorna um objeto UsersIdDTO com o ID do usuário criado
      */
     @Transactional
-    public UsersSimpleResponseDTO createUser(@RequestBody @Validated UsersRequestDTO usersRequestDTO) {
+    public Mono<UsersSimpleResponseDTO> createUser(UsersRequestDTO usersRequestDTO) {
+        return Mono.fromCallable(() -> {
+                    // Verifica se já existe um usuário com o email ou username fornecido
+                    validateUserDoesNotExist(usersRequestDTO);
+                    return usersRequestDTO;
+                })
+                .flatMap(reqDTO ->
+                        viaCepService.getAddressByCep(reqDTO.cep())  // Obtém um Mono<AddressDTO>
+                                .retry(5)  // Tenta novamente até 3 vezes em caso de falha
+                                .timeout(Duration.ofSeconds(10))  // Define timeout de 5 segundos
+                                .onErrorResume(e -> {
+                                    log.error("Failed to fetch address from ViaCep", e);
+                                    // Fornece um AddressDTO padrão aqui
+                                    return Mono.just(new AddressDTO("N/A", "N/A", "N/A", "N/A"));
+                                })
+                )
+                .map(address -> {
+                    Users users = objectMapperUtil.map(usersRequestDTO, Users.class);
 
-        // Verifica se já existe um usuário com o email ou com o username fornecido
-        validateUserDoesNotExist(usersRequestDTO);
+                    // Atualiza os dados apenas se o endereço não for padrão
+                    if (!"N/A".equals(address.localidade())) {
+                        users.setCity(address.localidade());
+                        users.setState(address.uf());
+                        users.setStreet(address.logradouro());
+                    }
 
-        // Busca os dados do endereço pelo CEP
-        AddressDTO address = viaCepService.getAddressByCep(usersRequestDTO.cep());
+                    return users;
+                })
 
-        // Cria o usuário com os dados do endereço
-        Users users = objectMapperUtil.map(usersRequestDTO, Users.class);
-        users.setCity(address.localidade());
-        users.setState(address.uf());
-        users.setStreet(address.logradouro());
-
-//        Users savedUser = this.usersRepository.save(objectMapperUtil.map(usersRequestDTO, Users.class));
-//        return new UsersSimpleResponseDTO(savedUser.getUsername());
-        // Salva o usuário no banco de dados
-        Users savedUser = usersRepository.save(users);
-        return new UsersSimpleResponseDTO(savedUser.getUsername());
+                .subscribeOn(Schedulers.boundedElastic()) // Executa em thread separada
+                .map(usersRepository::save) // Operação bloqueante
+                .map(savedUser -> new UsersSimpleResponseDTO(savedUser.getUsername()));
     }
 
     private void validateUserDoesNotExist(UsersRequestDTO usersRequestDTO) {
@@ -77,14 +97,11 @@ public class UsersService {
                 new UserNotFoundException("User not found with ID: " + userId));
     }
 
-
-
     public UsersSimpleResponseDTO getUserById(Long userId){
         Users user = this.usersRepository.findById(userId).orElseThrow(() ->
                 new UserNotFoundException("User not found with ID: " + userId));
         return new UsersSimpleResponseDTO(user.getUsername());
     }
-
 
     /**
      * Método responsável por buscar um usuário pelo username
@@ -110,9 +127,16 @@ public class UsersService {
         return new UsersSimpleResponseDTO(user.getUsername());
     }
 
-    public Page<UsersSummaryResponseDTO> getAllUsersDTO(PageRequest pageRequest) {
-        Page<Users> usersPage = usersRepository.findAllUsers(pageRequest);
-        return usersPage.map(user -> objectMapperUtil.map(user, UsersSummaryResponseDTO.class));
+    public Page<UsersResponseClassDTO> getAllUsersDTOPageable(Pageable pageRequest) {
+        Page<Users> usersPage = usersRepository.findAllUsersPageable(pageRequest);
+        return usersPage.map(user -> objectMapperUtil.map(user, UsersResponseClassDTO.class));
+    }
+
+    public List<UsersResponseClassDTO> getAllUsersDTO() {
+        List<Users> usersList = usersRepository.findAllUsers();
+        return usersList.stream()
+                .map(user -> objectMapperUtil.map(user, UsersResponseClassDTO.class))
+                .collect(Collectors.toList());
     }
 
     /**
