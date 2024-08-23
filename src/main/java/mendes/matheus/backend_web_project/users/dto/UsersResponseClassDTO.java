@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
-public class UsersSummaryResponseDTO {
+public class UsersResponseClassDTO {
 
         @JsonProperty(value = "id")
         private Long id;
@@ -14,6 +14,9 @@ public class UsersSummaryResponseDTO {
 
         @JsonProperty(value = "username")
         private String username;
+
+        @JsonProperty(value = "cep")
+        private String cep;
 
         @JsonProperty(value = "city")
         private String city;

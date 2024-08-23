@@ -10,9 +10,18 @@ public record UsersResponseDTO(
         @JsonProperty(value = "name")
         String name,
 
-        @JsonProperty(value = "email")
-        String email,
-
         @JsonProperty(value = "username")
-        String username
+        String username,
+
+        @JsonProperty(value = "cep")
+        String cep,
+
+        @JsonProperty(value = "city")
+        String city,
+
+        @JsonProperty(value = "state")
+        String state,
+
+        @JsonProperty(value = "street")
+        String street
 ) {}
